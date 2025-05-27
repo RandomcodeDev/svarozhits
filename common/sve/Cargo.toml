@@ -7,3 +7,4 @@ edition = "2024"
 std = []
 
 [dependencies]
+serde = { version = "1.0.219", default-features = false, features = ["derive"] }
