@@ -1,0 +1,18 @@
+cargo-features = ["different-binary-name"]
+
+[package]
+name = "svkernel"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "svkernel"
+filename = "svkernel.elf"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[dependencies]
