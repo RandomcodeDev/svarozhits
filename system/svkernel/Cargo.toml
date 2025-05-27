@@ -9,10 +9,5 @@ edition = "2024"
 name = "svkernel"
 filename = "svkernel.elf"
 
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"
-
 [dependencies]
+sve = { path = "../../common/sve" }
