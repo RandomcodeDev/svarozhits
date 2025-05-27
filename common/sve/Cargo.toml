@@ -3,4 +3,7 @@ name = "sve"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+std = []
+
 [dependencies]

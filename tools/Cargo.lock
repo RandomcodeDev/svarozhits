@@ -3,9 +3,12 @@
 version = 4
 
 [[package]]
-name = "svkernel"
+name = "sve"
 version = "0.1.0"
 
 [[package]]
-name = "svtools"
+name = "svetool"
 version = "0.1.0"
+dependencies = [
+ "sve",
+]
