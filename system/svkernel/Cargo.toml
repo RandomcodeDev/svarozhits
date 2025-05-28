@@ -10,4 +10,3 @@ name = "svkernel"
 filename = "svkernel.elf"
 
 [dependencies]
-sve = { path = "../../common/sve" }
