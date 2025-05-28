@@ -1,10 +1,18 @@
 # Сварожиц RISC-V game console
 
-I got bored, so now I'm gonna try making a game console. This isn't a serious project and I'll probably get bored of it soon.
+I've been getting into game consoles lately, so I thought it might be fun to try and make a really simple one myself.
 
-Svarozhits is a Slavic fire god or something, I think he's also conceptually similar to Hephaestus (I looked at a list and it was the coolest name).
+## Hardware
 
-I'm planning to use a RISC-V CPU and wire it up to an Xbox 360 Xenos GPU (they're really cheap on Alibaba and I found a boardview
-for them).
+I'm planning to use a cheap RISC-V board and a salvaged GPU chip (possibly the Xbox 360's Xenos GPU), which should be
+somehwere between the original Xbox and the 360 in terms of hardware.
 
-I'm writing a kernel and stuff in Rust, cause why not.
+## Software
+
+I'm also going to write an OS in Rust. I'm making a custom executable format for it. There won't be any separation
+between kernel and user space, much like older consoles, because context switches are expensive and can be avoided
+when there's only ever one program. It's going to support some kind of rendering API, probably more similar to modern
+APIs like Vulkan/D3D12, because they're closer to the hardware. It should support encryption and other security
+measures as well.
+
+Games will be in some kind of package format

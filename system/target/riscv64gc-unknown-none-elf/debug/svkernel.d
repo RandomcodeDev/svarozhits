@@ -1,1 +1,0 @@
-/home/mobslicer152/projects/svarozhits/system/target/riscv64gc-unknown-none-elf/debug/svkernel.elf: /home/mobslicer152/projects/svarozhits/common/sve/src/lib.rs /home/mobslicer152/projects/svarozhits/system/svkernel/src/main.rs /home/mobslicer152/projects/svarozhits/system/svkernel/src/panic.rs
