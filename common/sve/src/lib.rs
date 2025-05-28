@@ -3,7 +3,7 @@
 use bincode::{Decode, Encode};
 
 // SVE\0 (little endian)
-pub const SVE_MAGIC: u32 = 0x00698683;
+pub const SVE_MAGIC: u32 = 0x00455653;
 
 // Format version
 pub const SVE_REVISION: u16 = 1;
