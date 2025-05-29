@@ -1,7 +1,15 @@
+cargo-features = ["different-binary-name"]
+
 [package]
 name = "svboot"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "svboot"
+filename = "svboot.elf"
+
 [dependencies]
-device_tree = "1.1.0"
+fdt = "0.1.5"
+sbi = "0.3.0"
+uefi-raw = "0.11.0"
