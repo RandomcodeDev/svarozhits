@@ -11,5 +11,4 @@ filename = "svboot.elf"
 
 [dependencies]
 fdt = "0.1.5"
-sbi = "0.3.0"
-uefi-raw = "0.11.0"
+svbootlib = { path = "../svbootlib" }

@@ -3,48 +3,23 @@
 version = 4
 
 [[package]]
-name = "bitflags"
-version = "2.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
-
-[[package]]
 name = "fdt"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "784a4df722dc6267a04af36895398f59d21d07dce47232adf31ec0ff2fa45e67"
 
 [[package]]
-name = "sbi"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c64a569a412de4ad7b123f429e434751d74dd7ed25654af962b93c4d1cd584e"
-
-[[package]]
 name = "svboot"
 version = "0.1.0"
 dependencies = [
  "fdt",
- "sbi",
- "uefi-raw",
+ "svbootlib",
 ]
+
+[[package]]
+name = "svbootlib"
+version = "0.1.0"
 
 [[package]]
 name = "svkernel"
 version = "0.1.0"
-
-[[package]]
-name = "uefi-raw"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cad96b8baaf1615d3fdd0f03d04a0b487d857c1b51b19dcbfe05e2e3c447b78"
-dependencies = [
- "bitflags",
- "uguid",
-]
-
-[[package]]
-name = "uguid"
-version = "2.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab14ea9660d240e7865ce9d54ecdbd1cd9fa5802ae6f4512f093c7907e921533"

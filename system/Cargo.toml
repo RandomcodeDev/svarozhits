@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["svboot","svkernel"]
+members = ["svboot", "svbootlib","svkernel"]
 
 [profile.dev]
 panic = "abort"
