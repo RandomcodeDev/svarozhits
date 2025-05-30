@@ -6,6 +6,10 @@ use sve::{SVEExportDescriptor, SVEHeader, SVERelocDescriptor, SVERelocType};
 
 type BincodeConfig = Configuration<LittleEndian, Fixint, NoLimit>;
 
+fn build_header_and_sections(object: &object::File<'_>, config: BincodeConfig) -> Vec<u8> {
+    let mut header = SVEHeader::default();
+}
+
 fn build_relocs(object: &object::File, config: &BincodeConfig) -> Vec<u8> {
     let mut reloc_table = vec![];
     if let Some(relocs) = object.dynamic_relocations() {
@@ -76,7 +80,7 @@ fn add_string(string: &str, strings: &mut Vec<u8>) -> u32 {
 pub fn build_sve(object: &object::File) -> Vec<u8> {
     let config: BincodeConfig = Default::default();
 
-    let header = build_header(object, &config);
+    let header = build_header_and_sections(object, &config);
 
 
     let mut strings = vec![];
@@ -84,8 +88,4 @@ pub fn build_sve(object: &object::File) -> Vec<u8> {
     let exports = build_exports(object, &config, &mut strings);
 
     vec![header]
-}
-
-fn build_header(object: &object::File<'_>, config: BincodeConfig) -> Vec<u8> {
-    todo!()
 }
