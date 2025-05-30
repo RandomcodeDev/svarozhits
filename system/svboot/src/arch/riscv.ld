@@ -29,4 +29,6 @@ SECTIONS {
 	.rodata : ALIGN(4K) {
 		*(.rodata);
 	} > rodata
+
+    PROVIDE(kernel_end = .);
 }

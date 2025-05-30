@@ -1,4 +1,4 @@
-use std::{fmt, fs, os::unix::process::CommandExt, path::PathBuf, process::Command};
+use std::{fmt, fs, path::PathBuf, process::Command};
 
 use clap::Parser;
 
@@ -42,21 +42,8 @@ fn main() {
 
     let mut kernel_elf = input.clone();
     kernel_elf.push("svkernel.elf");
-    let mut kernel_pe = output.clone();
-    kernel_pe.push("svkernel.sys");
+    let mut kernel_sve = output.clone();
+    kernel_sve.push("svkernel.sve");
 
-    let mut objcopy = Command::new(format!("riscv64-unknown-linux-musl-objcopy"));
-    objcopy.args([
-        "-O",
-        "pei-riscv64-little",
-        "--subsystem=xbox",
-        kernel_elf.to_str().unwrap(),
-        kernel_pe.to_str().unwrap(),
-    ]);
 
-    println!("Running {:?}", objcopy);
-    match objcopy.output() {
-        Ok(_) => {}
-        Err(err) => panic!("objcopy failed: {:?}", err),
-    }
 }

@@ -1,7 +1,12 @@
+#[allow(static_mut_refs)]
 use svbootlib::BootInfo;
+use svbootlib::{MemBlock, MemRegion};
 
 use crate::{boot_main, dprint, dprintln};
-use core::arch::{asm, global_asm};
+use core::{
+    arch::{asm, global_asm},
+    ptr,
+};
 
 global_asm! {include_str!("riscv_start.S")}
 
@@ -42,7 +47,14 @@ pub fn debug_write(msg: &str) {
     }
 }
 
+#[unsafe(no_mangle)]
+unsafe extern "C" {
+    static mut kernel_end: u8;
+}
+
 pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
+    boot.initial_cpu_id = info.hart_id as usize;
+
     let device_tree = &info.device_tree;
 
     dprintln!("discovering devices\n");
@@ -61,6 +73,7 @@ pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
         &device_tree.find_node("/").expect("no nodes in device tree"),
         0,
     );
+    dprintln!("");
 
     dprintln!("finding largest memory region");
     let mut i = 0;
@@ -75,12 +88,50 @@ pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
 
         i += 1;
     }
+    dprintln!("using memory region {}", boot.memory_region);
 
-    dprintln!(
-        "using memory region 0x{:X}-0x{:X}",
-        boot.memory_region.base,
-        boot.memory_region.base + boot.memory_region.size
-    );
+    // TODO: do something sane instead of just assuming everything after the kernel is fine
+    //dprintln!("finding end of last reserved region");
+    //if let Some(reserved_mem) = device_tree.find_node("/reserved-memory") {
+    //    for node in reserved_mem.children() {
+    //        // unwrap like this because it can just be ignored if it fails
+    //        if let Some(mut reg) = node.reg()
+    //            && let Some(region) = reg.nth(0)
+    //            && let Some(size) = region.size
+    //        {
+    //            let reserved_region = MemRegion {
+    //                base: region.starting_address as usize,
+    //                size,
+    //            };
+    //
+    //            dprintln!("reserved memory region {}", reserved_region);
+    //
+    //            if reserved_region.base > current_block as usize {
+    //                current_block = (reserved_region.base + reserved_region.size) as *mut MemBlock;
+    //            }
+    //        }
+    //    }
+    //}
+
+    let mut current_block = &raw mut kernel_end as *mut MemBlock;
+    unsafe {
+        (*current_block).size =
+             boot.memory_region.base + boot.memory_region.size - current_block as usize;
+        (*current_block).next = ptr::null_mut();
+    }
+
+    dprintln!("usable memory area: {}", unsafe { &(*current_block) });
+    boot.memory_map = current_block;
 
     dprintln!("getting PCIe information");
+    let pci = device_tree
+        .find_node("/soc/pci")
+        .expect("failed to get /soc/pci in device tree");
+    let region = pci.reg().expect("pci node missing reg").nth(0).unwrap();
+    boot.pci_config_region.base = region.starting_address as usize;
+    boot.pci_config_region.size = region.size.expect("/pci reg missing size");
+    dprintln!(
+        "found PCIe extended configuration space at {}",
+        boot.pci_config_region
+    );
 }

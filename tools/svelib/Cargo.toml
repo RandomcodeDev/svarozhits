@@ -1,0 +1,9 @@
+[package]
+name = "svelib"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bincode = "2.0.1"
+object = "0.36.7"
+sve = { path = "../../system/sve" }
