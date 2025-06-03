@@ -1,9 +1,3 @@
 [workspace]
 resolver = "3"
-members = ["svboot", "svbootlib", "sve", "svkernel", "svpci"]
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"
+members = ["svboot", "svcommon", "sve", "svkernel", "svpci"]

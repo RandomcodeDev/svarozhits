@@ -1,6 +1,6 @@
 #[allow(static_mut_refs)]
-use svbootlib::BootInfo;
-use svbootlib::{MemBlock, MemRegion};
+use svcommon::BootInfo;
+use svcommon::MemBlock;
 
 use crate::{boot_main, dprint, dprintln};
 use core::{
@@ -47,7 +47,6 @@ pub fn debug_write(msg: &str) {
     }
 }
 
-#[unsafe(no_mangle)]
 unsafe extern "C" {
     static mut kernel_end: u8;
 }
@@ -57,7 +56,7 @@ pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
 
     let device_tree = &info.device_tree;
 
-    dprintln!("discovering devices\n");
+    dprintln!("processing device tree\n");
 
     fn print_node(node: &fdt::node::FdtNode<'_, '_>, indent: i32) {
         (0..indent).for_each(|_| dprint!(" "));
@@ -113,10 +112,10 @@ pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
     //    }
     //}
 
-    let mut current_block = &raw mut kernel_end as *mut MemBlock;
+    let current_block = &raw mut kernel_end as *mut MemBlock;
     unsafe {
         (*current_block).size =
-             boot.memory_region.base + boot.memory_region.size - current_block as usize;
+            boot.memory_region.base + boot.memory_region.size - current_block as usize;
         (*current_block).next = ptr::null_mut();
     }
 
@@ -128,10 +127,10 @@ pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
         .find_node("/soc/pci")
         .expect("failed to get /soc/pci in device tree");
     let region = pci.reg().expect("pci node missing reg").nth(0).unwrap();
-    boot.pci_config_region.base = region.starting_address as usize;
-    boot.pci_config_region.size = region.size.expect("/pci reg missing size");
+    boot.pcie_region.base = region.starting_address as usize;
+    boot.pcie_region.size = region.size.expect("/pci reg missing size");
     dprintln!(
         "found PCIe extended configuration space at {}",
-        boot.pci_config_region
+        boot.pcie_region
     );
 }

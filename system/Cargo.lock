@@ -32,12 +32,12 @@ name = "svboot"
 version = "0.1.0"
 dependencies = [
  "fdt",
- "svbootlib",
+ "svcommon",
  "svpci",
 ]
 
 [[package]]
-name = "svbootlib"
+name = "svcommon"
 version = "0.1.0"
 
 [[package]]
@@ -54,6 +54,9 @@ version = "0.1.0"
 [[package]]
 name = "svpci"
 version = "0.1.0"
+dependencies = [
+ "svcommon",
+]
 
 [[package]]
 name = "unty"

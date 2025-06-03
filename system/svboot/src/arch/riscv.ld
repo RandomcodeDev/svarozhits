@@ -7,6 +7,10 @@ MEMORY {
 }
 
 SECTIONS {
+	/DISCARD/ : {
+		*(.eh_frame);
+	}
+
 	.text : ALIGN(4K) {
 		*(.init);
 		*(.text);

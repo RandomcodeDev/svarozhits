@@ -11,5 +11,5 @@ filename = "svboot.elf"
 
 [dependencies]
 fdt = "0.1.5"
-svbootlib = { path = "../svbootlib" }
+svcommon = { path = "../svcommon" }
 svpci = { path = "../svpci" }

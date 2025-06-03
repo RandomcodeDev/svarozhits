@@ -1,16 +1,10 @@
 #![no_std]
 #![no_main]
 
-use core::{cell::UnsafeCell, mem, panic::PanicInfo};
-use svbootlib::{BootInfo, MemBlock};
-
-#[panic_handler]
-pub fn panic(info: &PanicInfo) -> ! {
-    dprintln!("{:#?}", info);
-    loop {}
-}
+use svcommon::BootInfo;
 
 mod arch;
+mod util;
 
 pub fn boot_main(mut arch_info: arch::ArchInfo<'_>) -> ! {
     dprintln!(
@@ -28,6 +22,10 @@ pub fn boot_main(mut arch_info: arch::ArchInfo<'_>) -> ! {
 
     let mut boot_info = BootInfo::default();
     arch::init(&mut arch_info, &mut boot_info);
+
+    let device = svpci::check_device(boot_info.pcie_region.base, 0, 0)
+        .expect("failed to get device 0 on bus 0");
+    dprintln!("{:#X?}", device);
 
     loop {}
 }

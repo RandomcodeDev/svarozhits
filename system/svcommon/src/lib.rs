@@ -1,15 +1,20 @@
 #![no_std]
 
-use core::{fmt::Display, ptr};
+use core::fmt::Display;
+
+#[allow(non_camel_case_types)]
+pub type uptr = usize;
+#[allow(non_camel_case_types)]
+pub type iptr = isize;
 
 #[derive(Clone, Debug, Default)]
 pub struct MemRegion {
-    pub base: usize,
+    pub base: uptr,
     pub size: usize,
 }
 
 impl MemRegion {
-    pub fn end(&self) -> usize {
+    pub fn end(&self) -> uptr {
         self.base + self.size
     }
 }
@@ -34,11 +39,11 @@ pub struct MemBlock {
 }
 
 impl MemBlock {
-    pub fn base(&self) -> usize {
-        &raw const *self as usize
+    pub fn base(&self) -> uptr {
+        &raw const *self as uptr
     }
 
-    pub fn end(&self) -> usize {
+    pub fn end(&self) -> uptr {
         self.base() + self.size
     }
 
@@ -64,7 +69,7 @@ impl Display for MemBlock {
             self.base(),
             self.end(),
             self.size,
-            self.next as usize
+            self.next as uptr
         )
     }
 }
@@ -74,5 +79,5 @@ pub struct BootInfo {
     pub initial_cpu_id: usize,
     pub memory_region: MemRegion,
     pub memory_map: *mut MemBlock,
-    pub pci_config_region: MemRegion,
+    pub pcie_region: MemRegion,
 }
