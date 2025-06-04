@@ -15,3 +15,12 @@ support some kind of rendering API, probably more similar to modern APIs like Vu
 the hardware. It should support encryption and other security measures as well.
 
 Games will be in some kind of package format, probably compressed and encrypted, and integrated into the VFS.
+
+## Testing
+
+You can run it in QEMU:
+```shell
+cd system
+cargo build
+qemu-system-riscv64 -machine virt -m 64M -kernel target/riscv64gc-unknown-none-elf/debug/svboot.elf -serial file:svaro.log
+```
