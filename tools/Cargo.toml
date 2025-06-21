@@ -1,3 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["build_system", "svelib"]
+members = ["build_system", "svelib", "svetool"]
+
+[default-run]
+bin = "build_system"

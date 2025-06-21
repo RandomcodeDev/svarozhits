@@ -29,16 +29,16 @@ pub struct SVEHeader {
 
     pub entry: u32, // address of the entry point relative to the code section
 
-    pub code: SVESectionDescriptor,   // executable code (.text)
-    pub data: SVESectionDescriptor,   // read/write initialized data (.data)
-    pub rodata: SVESectionDescriptor, // read-only initialized data (.rodata)
-    pub zdata: SVESectionDescriptor,  // zeroed data size (.bss)
+    pub code: SVEBlobDescriptor,   // executable code (.text)
+    pub data: SVEBlobDescriptor,   // read/write initialized data (.data)
+    pub rodata: SVEBlobDescriptor, // read-only initialized data (.rodata)
+    pub zdata: SVEBlobDescriptor,  // zeroed data size (.bss)
 
-    pub strings: SVEBlobDescriptor, // string table, null terminated strings
     pub relocs: SVEBlobDescriptor, // relocation table, SVERelocDescriptor
     pub imports: SVEBlobDescriptor, // import table, SVEImportDescriptor
     pub import_ptrs: SVEBlobDescriptor, // import pointer table, void (*)()/void*
     pub exports: SVEBlobDescriptor, // export table, SVEExportDescriptor
+    pub strings: SVEBlobDescriptor, // string table, null terminated strings
 }
 
 impl Default for SVEHeader {
@@ -51,10 +51,10 @@ impl Default for SVEHeader {
 
             entry: 0,
 
-            code: SVESectionDescriptor::default(),
-            data: SVESectionDescriptor::default(),
-            rodata: SVESectionDescriptor::default(),
-            zdata: SVESectionDescriptor::default(),
+            code: SVEBlobDescriptor::default(),
+            data: SVEBlobDescriptor::default(),
+            rodata: SVEBlobDescriptor::default(),
+            zdata: SVEBlobDescriptor::default(),
 
             strings: SVEBlobDescriptor::default(),
             relocs: SVEBlobDescriptor::default(),
@@ -67,18 +67,11 @@ impl Default for SVEHeader {
 
 #[repr(C)]
 #[derive(Clone, Debug, Default, Decode, Encode)]
-pub struct SVESectionDescriptor {
-    pub base: u32,     // offset from the base address to where this section is in memory
-    pub size: u32,     // size of the section in memory
-    pub offset: u32,   // offset in the file where the data is (can be zero)
-    pub raw_size: u32, // size of the section's data in the file (can be zero)
-}
-
-#[repr(C)]
-#[derive(Clone, Debug, Default, Decode, Encode)]
 pub struct SVEBlobDescriptor {
-    pub offset: u32,
-    pub size: u32,
+    pub base: u32,     // offset from the base address to where this blob is in memory
+    pub size: u32,     // size of the blob in memory
+    pub offset: u32,   // offset in the file where the blob is (can be zero if raw_size is)
+    pub raw_size: u32, // size of the blob's data in the file (can be zero)
 }
 
 #[repr(u8)]

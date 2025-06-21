@@ -1,22 +1,58 @@
-use std::collections::HashMap;
-
 use bincode::config::{Configuration, Fixint, LittleEndian, NoLimit};
 use object::{Object, ObjectSection, ObjectSymbol, RelocationKind};
 use sve::{
     SVEBlobDescriptor, SVEExportDescriptor, SVEHeader, SVEImportDescriptor, SVERelocDescriptor,
-    SVERelocType, SVESectionDescriptor,
+    SVERelocType,
 };
 
 type BincodeConfig = Configuration<LittleEndian, Fixint, NoLimit>;
 
-fn convert_section(object: &object::File<'_>, section: &object::Section<'_, '_>, offset: u32) -> SVESectionDescriptor {
-    let range = section.file_range().unwrap();
-    SVESectionDescriptor {
-        base: (section.address() - object.relative_address_base()) as u32,
-        size: section.size() as u32,
-        offset,
-        raw_size: (range.1 - range.0) as u32
+// TODO: propagate errors
+
+fn convert_section(
+    object: &object::File<'_>,
+    section: &Option<object::Section<'_, '_>>,
+    base: &mut u32,
+    offset: &mut u32,
+) -> Option<SVEBlobDescriptor> {
+    if let Some(section) = section {
+        let range = section.file_range().unwrap_or((0, 0));
+        let blob = SVEBlobDescriptor {
+            base: (section.address() - object.relative_address_base()) as u32,
+            size: section.size() as u32,
+            offset: *offset,
+            raw_size: range.1 as u32,
+        };
+        *base = blob.base + blob.size;
+        *offset += blob.offset;
+        return Some(blob);
     }
+
+    None
+}
+
+fn add_string(string: &str, strings: &mut Vec<u8>) -> u32 {
+    let offset = strings.len() as u32;
+    strings.append(&mut Vec::from(string));
+    offset
+}
+
+fn add_string_raw(string: &[u8], strings: &mut Vec<u8>) -> u32 {
+    let offset = strings.len() as u32;
+    let mut vec = string.to_vec();
+    strings.append(&mut vec);
+    offset
+}
+
+fn add_blob(base: &mut u32, size: u32, offset: &mut u32, raw_size: u32) -> SVEBlobDescriptor {
+    let blob = SVEBlobDescriptor {
+        base: *base,
+        size,
+        offset: *offset,
+        raw_size,
+    };
+    *offset += size;
+    blob
 }
 
 fn build_header_and_sections(
@@ -28,30 +64,58 @@ fn build_header_and_sections(
     exports_size: u32,
     config: &BincodeConfig,
 ) -> Vec<u8> {
-    let code_section = object.section_by_name(".text").expect("failed to get .text section!");
-    let data_section = object.section_by_name(".data").expect("failed to get .data section!");
-    let rodata_section = object.section_by_name(".rdata").expect("failed to get .rdata section!");
-    let zdata_section = object.section_by_name(".bss").expect("failed to get .bss section!");
+    // get the sections
+    let code_section = object.section_by_name(".text");
+    let data_section = object.section_by_name(".data");
+    let rodata_section = object.section_by_name(".rdata");
+    let zdata_section = object.section_by_name(".bss");
 
+    // convert section descriptors
     let mut offset = size_of::<SVEHeader>() as u32;
-    let sve_code = convert_section(object, &code_section, offset);
-    offset += sve_code.raw_size;
+    let mut base = 0;
 
-    let mut header = SVEHeader {
+    let sve_code = convert_section(object, &code_section, &mut base, &mut offset);
+    let sve_data = convert_section(object, &data_section, &mut base, &mut offset);
+    let sve_rodata = convert_section(object, &rodata_section, &mut base, &mut offset);
+    let sve_zdata = convert_section(object, &zdata_section, &mut base, &mut offset);
+
+    let entry = if let Some(code) = code_section {
+        object.entry() - code.address()
+    } else {
+        0
+    } as u32;
+
+    // build the header
+    let header = SVEHeader {
         magic: sve::SVE_MAGIC,
         revision: sve::SVE_REVISION,
-        machine: sve::SVEMachine::RISCV,
-        entry: (object.entry() - code_section.address()) as u32,
-        code: todo!(),
-        data: todo!(),
-        rodata: todo!(),
-        zdata: todo!(),
-        strings: todo!(),
-        relocs: todo!(),
-        imports: todo!(),
-        import_ptrs: todo!(),
-        exports: todo!(),
+        machine: sve::SVEMachine::RISCV, // TODO: figure out the actual machine type
+        entry,
+        code: sve_code.clone().unwrap_or_default(),
+        data: sve_data.clone().unwrap_or_default(),
+        rodata: sve_rodata.clone().unwrap_or_default(),
+        zdata: sve_zdata.clone().unwrap_or_default(),
+        relocs: add_blob(&mut base, relocs_size, &mut offset, relocs_size),
+        imports: add_blob(&mut base, imports_size, &mut offset, imports_size),
+        import_ptrs: add_blob(&mut base, import_ptrs_size, &mut offset, 0), // import pointers are in-memory only, same as zdata
+        exports: add_blob(&mut base, exports_size, &mut offset, exports_size),
+        strings: add_blob(&mut base, strings_size, &mut offset, strings_size),
     };
+    let mut header_data =
+        bincode::encode_to_vec(header, config.clone()).expect("failed to encode header");
+
+    // lay out the data
+    let mut data = vec![];
+    data.append(&mut header_data);
+    let sections = vec![sve_code, sve_data, sve_rodata, sve_zdata];
+    sections.iter().for_each(|section| {
+        if let Some(section) = section {
+            let mut section_data = bincode::encode_to_vec(section, config.clone()).expect("failed to encode section");
+            data.append(&mut section_data);
+        }
+    });
+
+    data
 }
 
 fn build_relocs(object: &object::File, config: &BincodeConfig) -> Vec<u8> {
@@ -79,7 +143,7 @@ fn build_relocs(object: &object::File, config: &BincodeConfig) -> Vec<u8> {
                 reloc_type,
             };
             let mut desc_raw = bincode::encode_to_vec(desc, config.clone())
-                .expect("failed to encode relocation descriptor!");
+                .expect("failed to encode relocation descriptor");
             reloc_table.append(&mut desc_raw);
         }
     }
@@ -105,7 +169,7 @@ fn build_imports(
                 ptr_offset: import_ptrs_size,
             };
             let mut import_data = bincode::encode_to_vec(sve_import, config.clone())
-                .expect("failed to encode import descriptor!");
+                .expect("failed to encode import descriptor");
             imports.append(&mut import_data);
             import_ptrs_size += 8;
         });
@@ -127,25 +191,12 @@ fn build_exports(object: &object::File, config: &BincodeConfig, strings: &mut Ve
             };
 
             let mut export_raw = bincode::encode_to_vec(export, config.clone())
-                .expect("failed to encode export descriptor!");
+                .expect("failed to encode export descriptor");
             exports.append(&mut export_raw);
         }
     });
 
     exports
-}
-
-fn add_string(string: &str, strings: &mut Vec<u8>) -> u32 {
-    let offset = strings.len() as u32;
-    strings.append(&mut Vec::from(string));
-    offset
-}
-
-fn add_string_raw(string: &[u8], strings: &mut Vec<u8>) -> u32 {
-    let offset = strings.len() as u32;
-    let mut vec = string.to_vec();
-    strings.append(&mut vec);
-    offset
 }
 
 pub fn build_sve(object: &object::File) -> Vec<u8> {
@@ -156,15 +207,19 @@ pub fn build_sve(object: &object::File) -> Vec<u8> {
     let (imports, import_ptrs_size) = build_imports(object, &config, &mut strings);
     let exports = build_exports(object, &config, &mut strings);
 
-    let header = build_header_and_sections(
+    let header_and_sections = build_header_and_sections(
         &object,
-        &strings,
-        &relocs,
-        &imports,
+        strings.len() as u32,
+        relocs.len() as u32,
+        imports.len() as u32,
         import_ptrs_size,
-        &exports,
+        exports.len() as u32,
         &config,
     );
 
-    let data = vec![header, relocs, exports, strings];
+    vec![header_and_sections, relocs, imports, exports, strings]
+        .iter()
+        .flatten()
+        .cloned()
+        .collect()
 }
