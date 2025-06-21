@@ -27,7 +27,7 @@ pub struct SVEHeader {
 
     pub machine: SVEMachine, // what architecture this image is for
 
-    pub entry: u32, // offset of the entry point
+    pub entry: u32, // address of the entry point relative to the code section
 
     pub code: SVESectionDescriptor,   // executable code (.text)
     pub data: SVESectionDescriptor,   // read/write initialized data (.data)
