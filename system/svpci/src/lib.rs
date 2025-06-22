@@ -91,10 +91,12 @@ pub const fn get_device_space(pcie_base: uptr, bus: u8, device: u8, function: u8
     pcie_base + ((bus as usize * 256) + (device as usize * 8) + function as usize) * 4096
 }
 
-// TODO: proper device wrapper struct
-pub fn check_device(pcie_base: uptr, bus: u8, device: u8) -> Option<&'static PCIStandardHeader> {
-    let function = 0;
+pub fn check_bus(bus: u8) -> bool {
 
+}
+
+// TODO: proper device wrapper struct
+pub fn check_device(pcie_base: uptr, bus: u8, device: u8, function: u8) -> Option<&'static PCIStandardHeader> {
     let device_base = get_device_space(pcie_base, bus, device, function);
     let device_header: &'static PCIStandardHeader = unsafe { &*(device_base as *const PCIStandardHeader) };
     if device_header.vendor_id == 0xFFFF {
