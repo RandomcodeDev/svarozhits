@@ -1,6 +1,7 @@
 use std::{fs, path::PathBuf, process::Command};
 
 use clap::Parser;
+use svelib::convert_object;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -45,9 +46,5 @@ fn main() {
     kernel_elf.push("svkernel.elf");
     let mut kernel_sve = output.clone();
     kernel_sve.push("svkernel.sve");
-    println!("Converting {} to {}", kernel_elf.to_str().unwrap(), kernel_sve.to_str().unwrap());
-    let elf_data = fs::read(kernel_elf).expect("failed to read kernel ELF");
-    let object = object::File::parse(&*elf_data).expect("failed to parse kernel ELF");
-    let sve_data = svelib::build_sve(&object);
-    fs::write(kernel_sve, sve_data).expect("failed to write kernel SVE");
+    convert_object(kernel_elf, kernel_sve);
 }

@@ -1,6 +1,7 @@
 use std::{fs, path::PathBuf};
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
+use svelib::convert_object;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -8,20 +9,32 @@ use clap::Parser;
     about = "A tool to manipulate Svarozhits exectuables (SVEs)"
 )]
 struct Args {
-    #[arg(short, long, help = "ELF input")]
-    input: PathBuf,
-    #[arg(short, long, help = "SVE output")]
-    output: PathBuf,
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    Convert {
+        #[arg(short, long)]
+        input: PathBuf,
+        #[arg(short, long)]
+        output: PathBuf,
+    },
+    Dump {
+        file: PathBuf,
+    },
 }
 
 fn main() {
     let args = Args::parse();
-    let input = args.input;
-    let output = args.output;
 
-    println!("Converting {} to {}", input.to_str().unwrap(), output.to_str().unwrap());
-    let elf_data = fs::read(input).expect("failed to read ELF");
-    let object = object::File::parse(&*elf_data).expect("failed to parse ELF");
-    let sve_data = svelib::build_sve(&object);
-    fs::write(output, sve_data).expect("failed to write SVE");
+    match &args.command {
+        Command::Convert { input, output } => {
+            svelib::convert_object(input, output);
+        }
+        Command::Dump { file } => {
+            svelib::dump_sve(file);
+        }
+    }
 }

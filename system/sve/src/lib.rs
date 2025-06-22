@@ -72,6 +72,7 @@ pub struct SVEBlobDescriptor {
     pub size: u32,     // size of the blob in memory
     pub offset: u32,   // offset in the file where the blob is (can be zero if raw_size is)
     pub raw_size: u32, // size of the blob's data in the file (can be zero)
+    pub align: u32,    // alignment of the blob, must be at least 1
 }
 
 #[repr(u8)]

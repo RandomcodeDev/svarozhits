@@ -1,3 +1,5 @@
+use std::{fs, path::PathBuf};
+
 use bincode::config::{Configuration, Fixint, LittleEndian, NoLimit};
 use object::{Object, ObjectSection, ObjectSymbol, RelocationKind};
 use sve::{
@@ -22,6 +24,7 @@ fn convert_section(
             size: section.size() as u32,
             offset: *offset,
             raw_size: range.1 as u32,
+            align: section.align() as u32,
         };
         *base = blob.base + blob.size;
         *offset += blob.offset;
@@ -31,16 +34,20 @@ fn convert_section(
     None
 }
 
+// TODO: add string table pooling
 fn add_string(string: &str, strings: &mut Vec<u8>) -> u32 {
     let offset = strings.len() as u32;
     strings.append(&mut Vec::from(string));
+    strings.push(0);
     offset
 }
 
+// TODO: add string table pooling
 fn add_string_raw(string: &[u8], strings: &mut Vec<u8>) -> u32 {
     let offset = strings.len() as u32;
     let mut vec = string.to_vec();
     strings.append(&mut vec);
+    strings.push(0);
     offset
 }
 
@@ -50,8 +57,10 @@ fn add_blob(base: &mut u32, size: u32, offset: &mut u32, raw_size: u32) -> SVEBl
         size,
         offset: *offset,
         raw_size,
+        align: 1
     };
-    *offset += size;
+    *base += size;
+    *offset += raw_size;
     blob
 }
 
@@ -200,7 +209,7 @@ fn build_exports(object: &object::File, config: &BincodeConfig, strings: &mut Ve
 }
 
 pub fn build_sve(object: &object::File) -> Vec<u8> {
-    let config: BincodeConfig = Default::default();
+    let config = BincodeConfig::default();
 
     let mut strings = vec![];
     let relocs = build_relocs(object, &config);
@@ -222,4 +231,20 @@ pub fn build_sve(object: &object::File) -> Vec<u8> {
         .flatten()
         .cloned()
         .collect()
+}
+
+pub fn convert_object(input: &PathBuf, output: &PathBuf) {
+    println!("Converting {} to {}", input.to_str().unwrap(), output.to_str().unwrap());
+    let elf_data = fs::read(input).expect("failed to read input executable");
+    let object = object::File::parse(&*elf_data).expect("failed to parse input executable");
+    let sve_data = build_sve(&object);
+    fs::write(output, sve_data).expect("failed to write Svarozhits executable");
+}
+
+pub fn dump_sve(file: &PathBuf) {
+    let config = BincodeConfig::default();
+
+    let data = fs::read(file).expect("failed to read input file");
+    let header: (SVEHeader, usize) = bincode::decode_from_slice(&data, config.clone()).expect("failed to decode header");
+    println!("{:#x?}", header);
 }

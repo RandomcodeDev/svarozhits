@@ -136,8 +136,8 @@ pub enum PCIDockingStationSubClass {
 #[repr(u8)]
 #[derive(Clone, Debug, Default)]
 pub enum PCIProcessorSubclass {
-    _386 = 0x0,
-    _486 = 0x1,
+    I386 = 0x0,
+    I486 = 0x1,
     Pentium = 0x2,
     PentiumPro = 0x3,
     Alpha = 0x10,

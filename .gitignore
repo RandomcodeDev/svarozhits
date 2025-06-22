@@ -1,3 +1,4 @@
 */target/
 *.svp
 *.log
+*.sve
