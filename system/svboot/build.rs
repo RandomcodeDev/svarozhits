@@ -12,4 +12,7 @@ fn main() {
     if let Some(linker_script) = linker_script {
         println!("cargo::rustc-link-arg-bin=svboot=-T{}/src/arch/{}", manifest_dir, linker_script);
     }
+
+    println!("cargo::rustc-link-arg-bin=svboot=-z");
+    println!("cargo::rustc-link-arg-bin=svboot=nostart-stop-gc");
 }

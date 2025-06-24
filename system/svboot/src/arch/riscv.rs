@@ -49,7 +49,12 @@ pub fn debug_write(msg: &str) {
 
 unsafe extern "C" {
     static mut kernel_end: u8;
+
+    pub static mut heap_start: u8;
+    pub static mut heap_end: u8;
 }
+
+pub const HEAP_SIZE: usize = 0x10000;
 
 pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
     boot.initial_cpu_id = info.hart_id as usize;
@@ -90,6 +95,13 @@ pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
     dprintln!("using memory region {}", boot.memory_region);
 
     // TODO: do something sane instead of just assuming everything after the kernel is fine
+    let current_block = &raw mut kernel_end as *mut MemBlock;
+    unsafe {
+        (*current_block).size =
+            boot.memory_region.base + boot.memory_region.size - current_block as usize;
+        (*current_block).next = ptr::null_mut();
+    }
+
     //dprintln!("finding end of last reserved region");
     //if let Some(reserved_mem) = device_tree.find_node("/reserved-memory") {
     //    for node in reserved_mem.children() {
@@ -111,13 +123,6 @@ pub fn init(info: &mut ArchInfo, boot: &mut BootInfo) {
     //        }
     //    }
     //}
-
-    let current_block = &raw mut kernel_end as *mut MemBlock;
-    unsafe {
-        (*current_block).size =
-            boot.memory_region.base + boot.memory_region.size - current_block as usize;
-        (*current_block).next = ptr::null_mut();
-    }
 
     dprintln!("usable memory area: {}", unsafe { &(*current_block) });
     boot.memory_map = current_block;

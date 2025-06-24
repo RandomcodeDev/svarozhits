@@ -1,4 +1,4 @@
-use core::{fmt::{self, Write}, panic::PanicInfo};
+use core::{fmt::{self, Write}, hint::spin_loop, panic::PanicInfo, sync::atomic::{AtomicBool, Ordering}};
 
 use crate::arch::debug_write;
 

@@ -1,5 +1,7 @@
 #![no_std]
 
+extern crate alloc;
+
 use core::fmt::Display;
 
 #[allow(non_camel_case_types)]
@@ -36,6 +38,7 @@ impl Display for MemRegion {
 pub struct MemBlock {
     pub next: *mut Self,
     pub size: usize,
+    pub used: usize
 }
 
 impl MemBlock {

@@ -11,5 +11,9 @@ filename = "svboot.elf"
 
 [dependencies]
 fdt = "0.1.5"
+talc = "4.4.3"
 svcommon = { path = "../svcommon" }
 svpci = { path = "../svpci" }
+lock_api = "0.4.13"
+spin = "0.10.0"
+ctor_bare = "0.2.1"

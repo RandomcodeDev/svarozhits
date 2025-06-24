@@ -1,12 +1,21 @@
 #![no_std]
 
+extern crate alloc;
+
+use alloc::{vec, vec::Vec};
 use svcommon::uptr;
 
 pub mod subclass;
 
 #[derive(Clone, Debug, Default)]
 pub struct PCIDevice {
-    _header: PCIStandardHeader,
+    header: *const PCIStandardHeader,
+}
+
+impl PCIDevice {
+    pub fn header(&self) -> &'static PCIStandardHeader {
+        unsafe { &*self.header }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -88,20 +97,30 @@ pub enum PCIClass {
 }
 
 pub const fn get_device_space(pcie_base: uptr, bus: u8, device: u8, function: u8) -> uptr {
-    pcie_base + ((bus as usize * 256) + (device as usize * 8) + function as usize) * 4096
+    pcie_base + (((bus as usize) << 8) + ((device as usize) << 3) + ((function as usize) << 0)) << 12
 }
 
-pub fn check_bus(bus: u8) -> bool {
+pub fn check_bus(pcie_base: uptr, bus: u8) -> Vec<PCIDevice> {
+    let mut devices = vec![];
+    for device in 0..32 {
+        if let Some(device) = check_device(pcie_base, bus, device, 0) {
+            devices.push(device);
+        }
+    }
 
+    devices
 }
 
-// TODO: proper device wrapper struct
-pub fn check_device(pcie_base: uptr, bus: u8, device: u8, function: u8) -> Option<&'static PCIStandardHeader> {
+pub fn check_device(pcie_base: uptr, bus: u8, device: u8, function: u8) -> Option<PCIDevice> {
+    if bus == 0 && device == 0 && function == 0 {
+        return None;
+    }
+
     let device_base = get_device_space(pcie_base, bus, device, function);
     let device_header: &'static PCIStandardHeader = unsafe { &*(device_base as *const PCIStandardHeader) };
     if device_header.vendor_id == 0xFFFF {
         return None;
     }
 
-    Some(device_header)
+    Some(PCIDevice { header: device_header })
 }
