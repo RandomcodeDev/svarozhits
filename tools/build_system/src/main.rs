@@ -37,14 +37,14 @@ fn main() {
 
     println!("Creating system image in {:?} from {:?}", output, input);
 
-    match fs::create_dir_all(&output) {
-        Ok(_) => {}
-        Err(err) => panic!("failed to create output directory: {:?}", err),
-    }
+    fs::create_dir_all(&output).expect("failed to create output directory");
 
     let mut kernel_elf = input.clone();
     kernel_elf.push("svkernel.elf");
-    let mut kernel_sve = output.clone();
-    kernel_sve.push("svkernel.sve");
-    convert_object(kernel_elf, kernel_sve);
+    let mut kernel_dest = output.clone();
+    kernel_dest.push("svkernel.elf");
+    //let mut kernel_sve = output.clone();
+    //kernel_sve.push("svkernel.sve");
+    //convert_object(&kernel_elf, &kernel_sve);
+    fs::copy(kernel_elf, kernel_dest).expect("failed to copy kernel to output directory");
 }

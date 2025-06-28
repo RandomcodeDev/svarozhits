@@ -24,5 +24,5 @@ You can run it in QEMU:
 ```shell
 cd system
 cargo build
-qemu-system-riscv64 -machine virt -m 64M -kernel target/riscv64gc-unknown-none-elf/debug/svboot.elf -serial file:svaro.log
+qemu-system-riscv64 -machine virt -m 64M -kernel target/riscv64gc-unknown-none-elf/debug/svkernel.elf -serial file:svaro.log
 ```

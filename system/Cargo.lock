@@ -97,23 +97,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "svboot"
-version = "0.1.0"
-dependencies = [
- "ctor_bare",
- "fdt",
- "lock_api",
- "spin",
- "svcommon",
- "svpci",
- "talc",
-]
-
-[[package]]
-name = "svcommon"
-version = "0.1.0"
-
-[[package]]
 name = "sve"
 version = "0.1.0"
 dependencies = [
@@ -123,12 +106,11 @@ dependencies = [
 [[package]]
 name = "svkernel"
 version = "0.1.0"
-
-[[package]]
-name = "svpci"
-version = "0.1.0"
 dependencies = [
- "svcommon",
+ "ctor_bare",
+ "fdt",
+ "spin",
+ "talc",
 ]
 
 [[package]]
